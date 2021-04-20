@@ -1,7 +1,7 @@
 ﻿namespace Racing2020Visual
 {
-    enum TrackTile
+    public enum TrackTile
     {
-        Horizontal,Vertical,DownUp,LeftDown,LeftUp,RightDown,RightUp,UpDown
+        Horizontal, Up, Down
     }
 }
