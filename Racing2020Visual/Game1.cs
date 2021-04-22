@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace Racing2020Visual
 {
@@ -19,9 +20,13 @@ namespace Racing2020Visual
         private Texture2D _trackHorizontal;
         private Texture2D _trackUp;
         private Texture2D _trackDown;
+        private Texture2D _cyclist;
         private IList<TrackTile> _trackTiles;
         private IList<TrackTileVisual> _trackTileVisuals;
         private float _screenPosition;
+        private float _cyclistPositionX;
+        private float _cyclistPositionY = 600;
+        private float _quotient;
 
         public Game1()
         {
@@ -49,7 +54,11 @@ namespace Racing2020Visual
             _trackTiles.Add(TrackTile.Horizontal);
             _trackTiles.Add(TrackTile.Horizontal);
 
-            _trackTileVisuals = DrawTrack.Track(_trackTiles);
+            _trackTileVisuals = DrawTrack.Track(_trackTiles, GraphicsDevice.DisplayMode.Width / 2);
+            _cyclistPositionX = GraphicsDevice.DisplayMode.Width / 2;
+
+            _quotient = ((float)TextureParameters.Horizontal / (float)TextureParameters.UpDown);
+
 
             base.Initialize();
         }
@@ -62,6 +71,7 @@ namespace Racing2020Visual
             _trackHorizontal = Content.Load<Texture2D>("TrackHorizontal");
             _trackUp = Content.Load<Texture2D>("TrackDownUp");
             _trackDown = Content.Load<Texture2D>("TrackUpDown");
+            _cyclist = Content.Load<Texture2D>("Cyclist");
         }
 
         protected override void Update(GameTime gameTime)
@@ -69,11 +79,30 @@ namespace Racing2020Visual
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+
             // TODO: Add your update logic here
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.Right))
             {
                 _screenPosition += 100f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                var positionCentertrack = _trackTileVisuals.Where(x => (x.X - _screenPosition) <= _cyclistPositionX).Max(x => x.X);
+                var centreTrack = _trackTileVisuals.Where(x => x.X == positionCentertrack).FirstOrDefault();
+
+                if (centreTrack.TrackTile == TrackTile.Horizontal)
+                {
+                    _cyclistPositionY = centreTrack.Y;
+                }
+                else if (centreTrack.TrackTile == TrackTile.Up)
+                {
+                    var differenceX = _cyclistPositionX - (positionCentertrack - _screenPosition);
+                    _cyclistPositionY = (centreTrack.Y + TextureParameters.UpDown / 2) - differenceX / 2;
+                }
+                else if (centreTrack.TrackTile == TrackTile.Down)
+                {
+                    var differenceX = _cyclistPositionX - (positionCentertrack - _screenPosition);
+                    _cyclistPositionY = centreTrack.Y + differenceX / 2;
+                }
             }
 
             base.Update(gameTime);
@@ -104,6 +133,9 @@ namespace Racing2020Visual
                 }
             }
 
+
+            _spriteBatch.Draw(_cyclist, new Vector2(_cyclistPositionX, _cyclistPositionY), Color.White);
+
             _spriteBatch.End();
 
             base.Draw(gameTime);
@@ -112,11 +144,10 @@ namespace Racing2020Visual
 
     public static class DrawTrack
     {
-
-        public static List<TrackTileVisual> Track(IList<TrackTile> trackTiles)
+        public static List<TrackTileVisual> Track(IList<TrackTile> trackTiles, int startPositionX)
         {
             var track = new List<TrackTileVisual>();
-            int x = 0;
+            int x = startPositionX;
             int y = 600;
 
             foreach (var tile in trackTiles)
