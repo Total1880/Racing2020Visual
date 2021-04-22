@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using System;
 using System.Linq;
 
 namespace Racing2020Visual
@@ -20,13 +19,14 @@ namespace Racing2020Visual
         private Texture2D _trackHorizontal;
         private Texture2D _trackUp;
         private Texture2D _trackDown;
-        private Texture2D _cyclist;
+
         private IList<TrackTile> _trackTiles;
         private IList<TrackTileVisual> _trackTileVisuals;
+        private IList<Cyclist> _cyclists;
+
         private float _screenPosition;
-        private float _cyclistPositionX;
-        private float _cyclistPositionY = 600;
-        private float _quotient;
+
+        private float _scrollSpeed = 200f;
 
         public Game1()
         {
@@ -35,6 +35,7 @@ namespace Racing2020Visual
             IsMouseVisible = true;
 
             _trackTiles = new List<TrackTile>();
+            _cyclists = new List<Cyclist>();
         }
 
         protected override void Initialize()
@@ -54,11 +55,17 @@ namespace Racing2020Visual
             _trackTiles.Add(TrackTile.Horizontal);
             _trackTiles.Add(TrackTile.Horizontal);
 
+            _cyclists.Add(new Cyclist(100f, 50f, 150f));
+            _cyclists.Add(new Cyclist(90f, 60f, 170f));
+            _cyclists.Add(new Cyclist(95f, 55f, 160f));
+            _cyclists.Add(new Cyclist(110f, 40f, 150f));
+
             _trackTileVisuals = DrawTrack.Track(_trackTiles, GraphicsDevice.DisplayMode.Width / 2);
-            _cyclistPositionX = GraphicsDevice.DisplayMode.Width / 2;
 
-            _quotient = ((float)TextureParameters.Horizontal / (float)TextureParameters.UpDown);
-
+            foreach (var cyclist in _cyclists)
+            {
+                cyclist.CyclistPositionX = GraphicsDevice.DisplayMode.Width / 2;
+            }
 
             base.Initialize();
         }
@@ -71,7 +78,11 @@ namespace Racing2020Visual
             _trackHorizontal = Content.Load<Texture2D>("TrackHorizontal");
             _trackUp = Content.Load<Texture2D>("TrackDownUp");
             _trackDown = Content.Load<Texture2D>("TrackUpDown");
-            _cyclist = Content.Load<Texture2D>("Cyclist");
+
+            foreach (var cyclist in _cyclists)
+            {
+                cyclist.CyclistTexture = Content.Load<Texture2D>("Cyclist");
+            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -84,24 +95,36 @@ namespace Racing2020Visual
             var kstate = Keyboard.GetState();
             if (kstate.IsKeyDown(Keys.Right))
             {
-                _screenPosition += 100f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                _screenPosition += _scrollSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
 
-                var positionCentertrack = _trackTileVisuals.Where(x => (x.X - _screenPosition) <= _cyclistPositionX).Max(x => x.X);
+            foreach (var cyclist in _cyclists)
+            {
+                var positionCentertrack = _trackTileVisuals.Where(x => (x.X - _screenPosition) <= cyclist.CyclistPositionX).Max(x => x.X);
                 var centreTrack = _trackTileVisuals.Where(x => x.X == positionCentertrack).FirstOrDefault();
 
                 if (centreTrack.TrackTile == TrackTile.Horizontal)
                 {
-                    _cyclistPositionY = centreTrack.Y;
+                    cyclist.CyclistPositionY = centreTrack.Y;
+                    cyclist.CyclistPositionX += cyclist.CyclistSpeedHorizontal * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 else if (centreTrack.TrackTile == TrackTile.Up)
                 {
-                    var differenceX = _cyclistPositionX - (positionCentertrack - _screenPosition);
-                    _cyclistPositionY = (centreTrack.Y + TextureParameters.UpDown / 2) - differenceX / 2;
+                    var differenceX = cyclist.CyclistPositionX - (positionCentertrack - _screenPosition);
+                    cyclist.CyclistPositionY = (centreTrack.Y + TextureParameters.UpDown / 2) - differenceX / 2;
+                    cyclist.CyclistPositionX += cyclist.CyclistSpeedUp * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 else if (centreTrack.TrackTile == TrackTile.Down)
                 {
-                    var differenceX = _cyclistPositionX - (positionCentertrack - _screenPosition);
-                    _cyclistPositionY = centreTrack.Y + differenceX / 2;
+                    var differenceX = cyclist.CyclistPositionX - (positionCentertrack - _screenPosition);
+                    cyclist.CyclistPositionY = centreTrack.Y + differenceX / 2;
+                    cyclist.CyclistPositionX += cyclist.CyclistSpeedDown * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                }
+
+
+                if (kstate.IsKeyDown(Keys.Right))
+                {
+                    cyclist.CyclistPositionX -= _scrollSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
             }
 
@@ -133,59 +156,14 @@ namespace Racing2020Visual
                 }
             }
 
-
-            _spriteBatch.Draw(_cyclist, new Vector2(_cyclistPositionX, _cyclistPositionY), Color.White);
+            foreach (var cyclist in _cyclists)
+            {
+                _spriteBatch.Draw(cyclist.CyclistTexture, new Vector2(cyclist.CyclistPositionX, cyclist.CyclistPositionY), Color.White);
+            }
 
             _spriteBatch.End();
 
             base.Draw(gameTime);
-        }
-    }
-
-    public static class DrawTrack
-    {
-        public static List<TrackTileVisual> Track(IList<TrackTile> trackTiles, int startPositionX)
-        {
-            var track = new List<TrackTileVisual>();
-            int x = startPositionX;
-            int y = 600;
-
-            foreach (var tile in trackTiles)
-            {
-
-
-                switch (tile)
-                {
-                    case TrackTile.Horizontal:
-                        track.Add(new TrackTileVisual(tile, x, y));
-
-                        x += TextureParameters.Horizontal;
-                        break;
-                    case TrackTile.Up:
-                        y -= TextureParameters.UpDown - TextureParameters.Horizontal;
-
-                        track.Add(new TrackTileVisual(tile, x, y));
-
-                        x += TextureParameters.UpDown;
-                        break;
-                    case TrackTile.Down:
-                        track.Add(new TrackTileVisual(tile, x, y));
-
-                        x += TextureParameters.UpDown;
-                        y += TextureParameters.UpDown - TextureParameters.Horizontal;
-                        break;
-                    default:
-                        throw Exception(tile + " not found");
-                }
-
-            }
-
-            return track;
-        }
-
-        private static Exception Exception(string message)
-        {
-            throw new NotImplementedException(message);
         }
     }
 }
