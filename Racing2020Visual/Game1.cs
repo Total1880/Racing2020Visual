@@ -55,10 +55,13 @@ namespace Racing2020Visual
             _trackTiles.Add(TrackTile.Horizontal);
             _trackTiles.Add(TrackTile.Horizontal);
 
-            _cyclists.Add(new Cyclist(100f, 50f, 150f));
-            _cyclists.Add(new Cyclist(90f, 60f, 170f));
-            _cyclists.Add(new Cyclist(95f, 55f, 160f));
-            _cyclists.Add(new Cyclist(110f, 40f, 150f));
+            var counter = 0;
+            do
+            {
+                _cyclists.Add(new Cyclist(RandomFloat(50f, 100f), RandomFloat(50f, 100f), RandomFloat(50f, 100f)));
+                counter++;
+            } while (counter < 10);
+
 
             _trackTileVisuals = DrawTrack.Track(_trackTiles, GraphicsDevice.DisplayMode.Width / 2);
 
@@ -103,8 +106,13 @@ namespace Racing2020Visual
                 var positionCentertrack = _trackTileVisuals.Where(x => (x.X - _screenPosition) <= cyclist.CyclistPositionX).Max(x => x.X);
                 var centreTrack = _trackTileVisuals.Where(x => x.X == positionCentertrack).FirstOrDefault();
 
+
                 if (centreTrack.TrackTile == TrackTile.Horizontal)
                 {
+                    if (centreTrack.X + TextureParameters.Horizontal < cyclist.CyclistPositionX + _screenPosition)
+                    {
+                        continue;
+                    }
                     cyclist.CyclistPositionY = centreTrack.Y;
                     cyclist.CyclistPositionX += cyclist.CyclistSpeedHorizontal * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
@@ -164,6 +172,13 @@ namespace Racing2020Visual
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        static float RandomFloat(float min, float max)
+        {
+            System.Random random = new System.Random();
+            double val = (random.NextDouble() * (max - min) + min);
+            return (float)val;
         }
     }
 }

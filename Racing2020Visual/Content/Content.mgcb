@@ -25,6 +25,18 @@
 /processorParam:TextureFormat=Color
 /build:Cyclist.png
 
+#begin D:/Users/OHENDRIC/OneDrive - Capgemini/Pictures/Cyclist.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:D:/Users/OHENDRIC/OneDrive - Capgemini/Pictures/Cyclist.png;Cyclist.png
+
 #begin TrackDownUp.png
 /importer:TextureImporter
 /processor:TextureProcessor
