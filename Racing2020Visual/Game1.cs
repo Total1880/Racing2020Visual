@@ -19,6 +19,7 @@ namespace Racing2020Visual
         private Texture2D _trackHorizontal;
         private Texture2D _trackUp;
         private Texture2D _trackDown;
+        private SpriteFont _spriteFont;
 
         private IList<TrackTile> _trackTiles;
         private IList<TrackTileVisual> _trackTileVisuals;
@@ -58,7 +59,7 @@ namespace Racing2020Visual
             var counter = 0;
             do
             {
-                _cyclists.Add(new Cyclist(RandomFloat(50f, 100f), RandomFloat(50f, 100f), RandomFloat(50f, 100f)));
+                _cyclists.Add(new Cyclist(RandomFloat(50f, 100f), RandomFloat(50f, 100f), RandomFloat(50f, 100f), "Cyclist " + counter));
                 counter++;
             } while (counter < 10);
 
@@ -81,6 +82,7 @@ namespace Racing2020Visual
             _trackHorizontal = Content.Load<Texture2D>("TrackHorizontal");
             _trackUp = Content.Load<Texture2D>("TrackDownUp");
             _trackDown = Content.Load<Texture2D>("TrackUpDown");
+            _spriteFont = Content.Load<SpriteFont>("Fonts/DefaultFont");
 
             foreach (var cyclist in _cyclists)
             {
@@ -167,6 +169,7 @@ namespace Racing2020Visual
             foreach (var cyclist in _cyclists)
             {
                 _spriteBatch.Draw(cyclist.CyclistTexture, new Vector2(cyclist.CyclistPositionX, cyclist.CyclistPositionY), Color.White);
+                _spriteBatch.DrawString(_spriteFont, cyclist.Name, new Vector2(cyclist.CyclistPositionX, cyclist.CyclistPositionY - TextureParameters.FontSize), Color.White);
             }
 
             _spriteBatch.End();
