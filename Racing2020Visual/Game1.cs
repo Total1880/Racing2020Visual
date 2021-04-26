@@ -26,7 +26,7 @@ namespace Racing2020Visual
         private IList<Cyclist> _cyclists;
 
         private float _screenPosition;
-
+        private float _centerX;
         private float _scrollSpeed = 200f;
 
         public Game1()
@@ -65,10 +65,11 @@ namespace Racing2020Visual
 
 
             _trackTileVisuals = DrawTrack.Track(_trackTiles, GraphicsDevice.DisplayMode.Width / 2);
+            _centerX = GraphicsDevice.DisplayMode.Width / 2;
 
             foreach (var cyclist in _cyclists)
             {
-                cyclist.CyclistPositionX = GraphicsDevice.DisplayMode.Width / 2;
+                cyclist.CyclistPositionX = _centerX;
             }
 
             base.Initialize();
@@ -98,16 +99,14 @@ namespace Racing2020Visual
 
             // TODO: Add your update logic here
             var kstate = Keyboard.GetState();
-            if (kstate.IsKeyDown(Keys.Right))
-            {
-                _screenPosition += _scrollSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            }
+
+            var raceLeader = _cyclists[0];
 
             foreach (var cyclist in _cyclists)
             {
                 var positionCentertrack = _trackTileVisuals.Where(x => (x.X - _screenPosition) <= cyclist.CyclistPositionX).Max(x => x.X);
                 var centreTrack = _trackTileVisuals.Where(x => x.X == positionCentertrack).FirstOrDefault();
-
+                var oldPosition = cyclist.CyclistPositionX;
 
                 if (centreTrack.TrackTile == TrackTile.Horizontal)
                 {
@@ -131,13 +130,19 @@ namespace Racing2020Visual
                     cyclist.CyclistPositionX += cyclist.CyclistSpeedDown * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
 
-
-                if (kstate.IsKeyDown(Keys.Right))
+                if (cyclist.CyclistPositionX > raceLeader.CyclistPositionX)
                 {
-                    cyclist.CyclistPositionX -= _scrollSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    raceLeader = cyclist;
                 }
-            }
 
+            }
+            var _raceLeaderGain = (raceLeader.CyclistPositionX - _centerX);
+
+            foreach (var cyclist in _cyclists)
+            {
+                cyclist.CyclistPositionX -= _raceLeaderGain;
+            }
+            _screenPosition += _raceLeaderGain;
             base.Update(gameTime);
         }
 
