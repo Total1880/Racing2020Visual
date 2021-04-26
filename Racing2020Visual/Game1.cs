@@ -25,6 +25,8 @@ namespace Racing2020Visual
         private IList<TrackTileVisual> _trackTileVisuals;
         private IList<Cyclist> _cyclists;
 
+        private Queue<Cyclist> _finishedCyclists;
+
         private float _screenPosition;
         private float _centerX;
         private float _scrollSpeed = 200f;
@@ -37,6 +39,7 @@ namespace Racing2020Visual
 
             _trackTiles = new List<TrackTile>();
             _cyclists = new List<Cyclist>();
+            _finishedCyclists = new Queue<Cyclist>();
         }
 
         protected override void Initialize()
@@ -112,6 +115,10 @@ namespace Racing2020Visual
                 {
                     if (centreTrack.X + TextureParameters.Horizontal < cyclist.CyclistPositionX + _screenPosition)
                     {
+                        if (!_finishedCyclists.Contains(cyclist))
+                        {
+                            _finishedCyclists.Enqueue(cyclist);
+                        }
                         continue;
                     }
                     cyclist.CyclistPositionY = centreTrack.Y;
@@ -175,6 +182,13 @@ namespace Racing2020Visual
             {
                 _spriteBatch.Draw(cyclist.CyclistTexture, new Vector2(cyclist.CyclistPositionX, cyclist.CyclistPositionY), Color.White);
                 _spriteBatch.DrawString(_spriteFont, cyclist.Name, new Vector2(cyclist.CyclistPositionX, cyclist.CyclistPositionY - TextureParameters.FontSize), Color.White);
+            }
+
+            var counter = 0;
+            foreach (var finishedCyclist in _finishedCyclists)
+            {
+                counter++;
+                _spriteBatch.DrawString(_spriteFont, finishedCyclist.Name, new Vector2(0, TextureParameters.FontSize * counter), Color.White);
             }
 
             _spriteBatch.End();
